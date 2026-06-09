@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday! 🎈</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fed6e3 0%, #a8c1ef 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+
+        #game-container {
+            z-index: 10;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #4a4e69;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .instructions {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        /* Wish Display Panel */
+        #wish-display {
+            min-height: 80px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #22223b;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wish-line {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s forwards;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Balloon Styling */
+        .balloon {
+            position: absolute;
+            width: 60px;
+            height: 75px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.15), 2px 5px 10px rgba(0,0,0,0.1);
+            animation: floatUp 8s linear infinite;
+            bottom: -100px;
+        }
+
+        .balloon::after {
+            content: "▲";
+            color: inherit;
+            font-size: 10px;
+            position: absolute;
+            bottom: -6px;
+            left: 25px;
+        }
+
+        .balloon::before {
+            content: "";
+            position: absolute;
+            width: 2px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.1);
+            bottom: -54px;
+            left: 29px;
+        }
+
+        .balloon:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes floatUp {
+            0% {
+                bottom: -100px;
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(30px);
+            }
+            100% {
+                bottom: 105vh;
+                transform: translateX(-20px);
+            }
+        }
+
+        /* Confetti Elements */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            animation: fall 4s linear infinite;
+        }
+
+        @keyframes fall {
+            0% { top: -10px; transform: translateX(0) rotate(0deg); opacity: 1; }
+            100% { top: 100vh; transform: translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Final Screen Celebration Overlay */
+        #celebration-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: fadeIn 1s forwards;
+        }
+
+        .grand-wish {
+            font-size: 3.5rem;
+            color: #d90429;
+            margin-bottom: 20px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <h1>A Special Surprise Box For Anil Sir! 🎁</h1>
+        <p class="instructions">Pop the floating balloons to unlock your birthday wishes!</p>
+        <div id="wish-display"></div>
+    </div>
+
+    <!-- Final Surprise View -->
+    <div id="celebration-overlay">
+        <div class="grand-wish">🎉 HAPPY BIRTHDAY! 🎉</div>
+        <p style="font-size: 1.5rem; color: #4a4e69; max-width: 500px; padding: 0 20px;">
+            May your year ahead be full of endless adventures, joy, laughter, and major success! 🎂✨
+        </p>
+    </div>
+
+    <script>
+        // Array of custom chronological wishes to display on pops
+        const birthdayWishes = [
+            "✨ Wishing you a beautiful day...",
+            "🎈 Filled with endless laughter...",
+            "🍰 Wrapped in love and warmth...",
+            "🚀 And a year of smashing all your goals!",
+            "👉 One more balloon left for the grand surprise!"
+        ];
+
+        let popCount = 0;
+        const totalBalloonsNeeded = birthdayWishes.length + 1; // Last one triggers grand finale
+        const wishDisplay = document.getElementById('wish-display');
+        const colors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ff924c'];
+
+        // Function to build and deploy a single balloon
+        function createBalloon() {
+            // Prevent spawning more balloons if the layout is already complete
+            if (popCount >= totalBalloonsNeeded) return;
+
+            const balloon = document.createElement('div');
+            balloon.className = 'balloon';
+            
+            // Random styling options
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const randomLeft = Math.floor(Math.random() * 85) + 5; // keeps it inside screen bounds
+            const randomDuration = Math.floor(Math.random() * 4) + 6; // 6 to 10 seconds
+
+            balloon.style.backgroundColor = randomColor;
+            balloon.style.color = randomColor; // For matching triangle string knot
+            balloon.style.left = randomLeft + '%';
+            balloon.style.animationDuration = randomDuration + 's';
+
+            // Event listener to manage balloon clicking/popping mechanics
+            balloon.addEventListener('click', () => {
+                handleBalloonPop(balloon);
+            });
+
+            document.body.appendChild(balloon);
+
+            // Automatically clean up hidden DOM nodes after they finish floating past viewport
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.remove();
+                    createBalloon(); // Spawn a replacement balloon
+                }
+            }, randomDuration * 1000);
+        }
+
+        // Processing rules when user pops a balloon
+        function handleBalloonPop(balloon) {
+            balloon.remove();
+            
+            if (popCount < birthdayWishes.length) {
+                // Generate a line entry matching current indexing sequence
+                const newLine = document.createElement('div');
+                newLine.className = 'wish-line';
+                newLine.innerText = birthdayWishes[popCount];
+                wishDisplay.appendChild(newLine);
+            }
+            
+            popCount++;
+
+            if (popCount >= totalBalloonsNeeded) {
+                triggerGrandFinale();
+            } else {
+                // Replenish the field with fresh balloons to keep user engaged
+                createBalloon();
+                createBalloon();
+            }
+        }
+
+        // Renders visual reward loop upon full interaction discovery
+        function triggerGrandFinale() {
+            // Display fullscreen celebratory overlay structure
+            document.getElementById('celebration-overlay').style.display = 'flex';
+            
+            // Generate full screen falling confetti pieces
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 8 + 6 + 'px';
+                confetti.style.height = Math.random() * 12 + 6 + 'px';
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = Math.random() * 2 + 3 + 's';
+                document.body.appendChild(confetti);
+            }
+        }
+
+        // Initialize game board configuration with initial baseline batch
+        for (let i = 0; i < 6; i++) {
+            setTimeout(createBalloon, i * 400); // staggered entry paths
+        }
+    </script>
+</body>
+</html>
